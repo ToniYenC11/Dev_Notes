@@ -81,3 +81,103 @@ Your MLOps instincts are solid and above average for your level. Your evaluation
 
 - The EDD point is sharp and above what I expected — source of wealth classification at onboarding is exactly how private banking segments high-net-worth cold start users. That's a real answer.
 Q5 score: 7/10 — better than your last three.
+
+## Q6. An NLP model you built classifies customer support chat messages at GCash into categories: fraud report, transaction dispute, account access issue, general inquiry. Your model has 91% accuracy in testing. Two weeks after deployment, the operations team reports it keeps misclassifying a new type of complaint they're seeing — users reporting a SIM swap scam that GCash wasn't aware of at training time. What is this problem called technically, and what is your remediation plan?
+
+### My Answer
+
+Analysis:
+
+- Model accuracy of 91% in testing does not convey much information if the dataset distribution is never mentioned.
+- No mention of the influx of data has resulted in the change of distribution for the input data. Data drift is ruled out.
+- No mention of any new features introduced or increased trends. Feature drift also ruled out
+- A new type of complaint the model cannot link to any of the labels it was trained with means that the relationship of the label from the input changed despite the input remaining the same. The language used for these scam reports would map conveniently to a fraud report, but the current model was not trained to handle the pattern. Because eal world data redefined "fraud" different from what the model understands, it cannot classify it correctly.
+Remediation Plan
+
+Verdict: Concept Drift - The features of the new cases redefined the label "fraud" which results in being misclassified.
+
+Remediation plan:
+
+1. Pull all these cases out of the current data. Run a confusion matrix broken down by category and identify where SIM swap complaints are landing. Identify how severe it is as a False Negative and the patterns.
+
+2. Take a sample of the misclassified cases and use SHAP or LIME on their data. Identify which tokens/phrases are resulting in the wrong predictions. This adds confirmation on whether a feature is resulting in the skewing of the distribution (Feature drift/ data drift) or a genuine mapping problem (Concept drift)
+
+3. Set up the following before retraining the model: 1. Confidence score monitoring per category. Novel inputs correspond into low-confidence scores, which may be an early warning for the next SIM swap-type event. 2. A human-in-the-loop for reviewing the low confidence score. This results in proper labeling of the misclassified cases that can be used as new training data.
+4. Take the rest of the unsample cases of SIM swap and evaluate. Use a different metrics aside from accuracy: F1 Scoring on each class, which balances precision and recall but also identifies categories that need further attention. When all classes are equally 0.85 in F1 Score, it tells me more than just a 91% accuracy globally.
+5. When a new drift occurs, you need to formalize the protocol to handle it: Low-confidence score detected -> Human review -> Periodic retraining and evaluation 6.
+
+### Claude's Answer
+
+That is your best answer in this quiz by a significant margin.
+
+[Certain] You correctly identified concept drift — the relationship between input and label changed because the real world redefined what "fraud" means, not because the data distribution shifted. That distinction is exactly what separates engineers who understand ML systems from engineers who just train models. Most candidates your level conflate concept drift with data drift. You didn't.
+
+The SHAP/LIME application to NLP classification to confirm drift type is sophisticated — and correct. Identifying which tokens are driving misclassification before retraining is the right diagnostic step. Most engineers skip straight to retraining.
+
+Human-in-the-loop for low-confidence score routing is production-grade thinking. Confidence threshold monitoring as an early warning system for the next novel complaint type is genuinely senior-level.
+
+Three gaps, all minor:
+
+1. The technical term you didn't use: What you described is specifically concept drift — not just "mapping problem." Use the term. In a GCash interview, using precise terminology signals you can communicate with other ML engineers without ambiguity.
+
+2. Remediation step 3 needs a trigger condition. "Confidence score monitoring" needs a defined threshold before it's actionable. What confidence score below what value routes to human review? 0.6? 0.7? And what volume of low-confidence cases in a 24-hour window triggers a retraining pipeline — 50 cases? 500? Without a number, it's a policy without enforcement.
+
+3. Class imbalance in retraining. SIM swap cases will be dramatically underrepresented in your retraining data versus established categories like "general inquiry." If you retrain naively, the model will still underperform on SIM swap because it saw 50 SIM swap examples versus 50,000 general inquiry examples. You need to address this — oversampling, class weighting, or focal loss.
+
+## Q7. GoTyme wants to build a chatbot that answers customer questions about their products — savings rates, loan eligibility, credit card terms. They ask you to choose between two approaches: fine-tuning an open-source LLM on GoTyme's product documentation, or building a RAG pipeline over the same documentation. What do you recommend and why — and what is the failure mode of the approach you did NOT choose?
+
+### My Answer
+
+#### Fine-Tuning
+
+Pros: 
+- Faster to implement due to the lack of additional overhead: Preprocess data -> Let model learn data -> Evaluate model
+
+Cons: 
+- Open-source models are trained on general datasets that may not be representative of GoTyme's product documentation. In short, it cannot cite exactly the data you put.
+- The knowledge is static - it does not change when data changes which needs you to fine-tune it again when the model is presented new data
+
+Failure modes:
+1. A user wants to specifically buy a traditional broom, but the model was trained to upgrade all brooms to a vacuum cleaner, so it recommends a vacuum cleaner instead
+2. GoTyme partners with a small brand name "CleanX" on vacuum cleaners to provide an affordable option. However, the model was trained to recognize big players like "Dyson" instead without considering the user's budget. 
+3. Samsung releases the S26 today. The model was trained last year, so it recorrects any recommendation for S26 into the last year's model S25
+
+RAG 
+
+Pros:
+- Allows the model to access your proprietary data and cite it exactly 
+- The knowledge adapts to new data being presented. No retraining needed, which saves time in the long run.
+
+Cons:
+- Adds setup overhead (vector store, embedding model, prompt engineering, vector embedding measurement, etc.). Each component results in higher costs due to maintenance and subscription to the services.
+
+Failure modes:
+
+1. The embedding model used did not properly embed "cervical" in terms of either the female part "cervix" or the neck area. A user having trouble in the neck may be prescribed an HPV diagnostic kit.
+2. Vector store is a specific database that stores the vectors of all documents after being embedded. Any failure mode of a database (accidental deletion, too much vectors stored, etc.) are expected to occur
+
+**Recommendation**: Due to the possible changes in company policies, loan eligibility criteria, saving rates due to inflation, among other dynamic signals, I recommend to RAG the company's policies, calculations, and relevant documents. Use only the fine-tuned model when you want to output the data in a specific format (i.e. using it as the customer-facing model but the knowledge comes from the RAG system). Most RAG solution use an LLM with proper prompt engineering to output answers in a specific format.
+
+### Claude's Verdict
+
+Your recommendation is correct and the reasoning is sound. The hybrid framing at the end — RAG for knowledge, fine-tuned model for output format — is exactly how production fintech chatbots are actually built. That's not beginner thinking.
+
+But your failure mode examples are wrong for the domain. You answered with e-commerce and medical examples instead of GoTyme-specific ones, which tells me you understand the concepts abstractly but haven't yet grounded them in the actual problem.
+
+Let me correct the failure modes for both:
+
+- Fine-tuning failure mode in a GoTyme context: A user asks "what is the current interest rate on GoTyme savings?" The fine-tuned model answers 4.5% with complete confidence — which was correct when it was trained six months ago. BSP adjusted the policy rate twice since then. GoTyme updated their product page. The fine-tuned model has no access to that update and cannot flag its own staleness. The user makes a financial decision based on a wrong number. In a regulated banking context this is not just a UX failure — it is a potential BSP compliance violation under consumer protection guidelines.
+
+- RAG failure mode in a GoTyme context: A user asks "am I eligible for a GoTyme credit card?" The RAG pipeline retrieves three chunks from the product documentation — minimum income requirement, age requirement, and account standing requirement. But the fourth eligibility criterion — that the user must have an active GoTyme account for at least 90 days — is buried in a compliance addendum that was chunked poorly and scored low in retrieval. The model answers "yes, you're eligible" based on the three retrieved chunks. The user applies, gets rejected, and calls support angry. The failure is in chunking strategy and retrieval completeness, not in the LLM itself.
+
+Those are the failure modes that matter for a GoTyme interview. Domain-specific, operationally consequential, and pointing to the exact engineering fix needed.
+
+Two other gaps worth naming:
+
+- You didn't mention retrieval evaluation. RAG systems need a separate evaluation layer — RAGAS or DeepEval — that measures whether the retrieved chunks actually contain the answer before the LLM generates a response. Without this, you're flying blind on retrieval quality. This maps directly to Project 03 in your roadmap.
+
+- The cost framing on RAG cons is slightly off. The dominant cost in a production RAG system is not the vector store subscription — it's LLM inference costs per query multiplied by query volume. At GoTyme's scale, that number becomes significant fast. The mitigation is caching frequent query-response pairs and using a smaller model for simple factual lookups.
+
+Q7 score: 8/10. Strongest conceptual answer after Q6. The hybrid recommendation is production-grade. The failure modes need domain grounding.
+
+## Q8 Maya's fraud detection model flags 10,000 transactions per day as suspicious. Of those, 9,500 are legitimate transactions incorrectly flagged. The operations team manually reviews all 10,000 daily. The head of risk asks you to fix this. What metric is broken, what is causing it, and what is your solution?
