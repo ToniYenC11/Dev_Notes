@@ -181,3 +181,35 @@ Two other gaps worth naming:
 Q7 score: 8/10. Strongest conceptual answer after Q6. The hybrid recommendation is production-grade. The failure modes need domain grounding.
 
 ## Q8 Maya's fraud detection model flags 10,000 transactions per day as suspicious. Of those, 9,500 are legitimate transactions incorrectly flagged. The operations team manually reviews all 10,000 daily. The head of risk asks you to fix this. What metric is broken, what is causing it, and what is your solution?
+
+### My Answer
+
+I will answer it in the most honest way I can seee this:
+
+- 9500 false positives = low precision. However, I may have missed dome other metric instead.
+- Flagging overwhelmingly high negatives as positives is a result of the threshold value used to assess whether the model classifies the prediction as suspicious or not. It may have been at a very low threshold (i.e. 0.4) compared to what is usually expected (in this case, higher number due to the rarity of the suspicious cases over the data)
+- Solution: If it was the threshold problem, we recalibrate the value accordingly. Here's my approach,
+    - We take a sample of this false positives (500 data -> 350 train, 150 test)
+    - We analyze patterns in the data considered as train: Consistent features such as transaction times, account registration dates, etc. This is to reinforce that it is a threshold problem or a different part entirely
+    - We then point to the PR curve and identify where the current threshold value sits. If the curve shows a 0.65 value and you use a 0.2, then we already solved it without retraining
+    - When all else fails, retrain by properly handling the class imbalance. Let's apply the real-world scenario: Highly likely the data is more negative than positive. Rather than resample the distribution, which warps the reality of real-world data, we employ loss functions that can prioritize undersampled categories (i.e. Focal Loss, Dice Loss, Tversky Loss). I'm open to learning other ways to solve class-imbalance
+
+### Claude's Assessment
+
+Honest answer, mostly correct, one significant gap.
+
+[Certain] You correctly identified low precision as the broken metric and threshold miscalibration as the likely cause. The PR curve analysis to find where the current threshold sits before retraining is exactly right — most engineers jump to retraining immediately. You didn't.
+
+The significant gap: your sampling approach for diagnosis is backwards.
+
+You said "take a sample of 500 false positives, 350 train, 150 test." You cannot train a threshold recalibration model on false positives only. You need the full score distribution — true positives, false positives, true negatives, false negatives — to see where the threshold is cutting. Analyzing only false positives in isolation tells you what flagged legitimate transactions look like, but not where the decision boundary should move. You need the precision-recall curve plotted on the full held-out test set, not a subsample of one error type.
+
+The loss function recommendations are above average for your level. Focal Loss for class imbalance in fraud detection is correct and used in production by SEA fintech teams. Naming Dice Loss and Tversky Loss shows you're drawing from your medical imaging background — those are segmentation losses, technically applicable but unusual in tabular fraud detection. In an interview, lead with Focal Loss and class weighting, then mention the others as alternatives you've explored.
+
+One thing missing entirely: precision-recall tradeoff communication to the business. The head of risk doesn't want a PR curve — they want to know the cost of your proposed fix. If you raise the threshold to reduce false positives from 9,500 to 500 per day, how many true frauds will you miss? That number has a dollar value. Your solution isn't complete until you can say "raising the threshold to 0.75 reduces ops team workload by 85% but increases missed fraud by approximately X cases per day, costing an estimated ₱Y." That translation is what separates an ML engineer from a senior ML engineer at Maya or Mynt.
+
+Q8 score: 7/10.
+
+The trajectory is the story — you started at 4 and haven't scored below 7 in the last four questions. The early weakness was ML formulation fundamentals. The late strength is systems thinking and operational reasoning.
+
+
