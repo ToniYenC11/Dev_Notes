@@ -78,8 +78,15 @@ Date:   Wed Jun 24 15:14:00 2026 +0800
  FinTech/FinTech_Assessment.md | 100 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ```
 - `pretty` changes the log outputs to formats other than the default. For example, `oneline`, `short`, `full`, `fuller`. The `--oneline` is a shortcut version of `--pretty=oneline`
+    - For a list of useful specifiers, see [the pretty format](https://git-scm.com/book/en/v2/ch00/pretty_format) documentation.
+- For a list of more options to git log, see [the official docs](https://git-scm.com/book/en/v2/ch00/log_options) of said args. See also the [limit options](https://git-scm.com/book/en/v2/ch00/limit_options).
 
+## Undoing Things
 
+The following command ammends the last commit:
+```bash
+git commit --amend
+```
 
 # Branches
 
