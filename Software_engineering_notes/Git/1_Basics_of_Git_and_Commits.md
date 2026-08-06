@@ -88,6 +88,51 @@ The following command ammends the last commit:
 git commit --amend
 ```
 
+and you can add a current changed file then invoke the command to include it in the previous commit:
+```bash
+git commit -m "created file"  # Assume commit created with hash 123456
+git add .  # This adds ammendments to the file
+git commit --amend # Opens nano for editing message, then commit is still 123456
+```
+
+To restore current commit to a previous:
+```bash
+git reset HEAD~[int] 
+```
+The [int] is the number of commits from the current that you wish to restore. So if you want to restore to the previous commit, set `n=1`. Hence, `git reset HEAD~1`.
+
+To remove the file from staging environment (STAGED -> MODIFIED):
+```bash
+git restore --staged <file> # From git advisory
+```
+
+To discard changes in working directory (Remove them from Modified state):
+```bash
+git restore <file>
+```
+
+# Working With Remotes
+
+`git remote` shows your current remote repo as its shortname. Supply `-v` to show the URL for both fetch and push.
+
+To add a remote: `git remote add <shortname> <url>`
+To import the data to your local repository WITHOUT merging: `git fetch <shortname> <branch>`
+To import the data to your local repository AND merge the remote branch to your current branch: `git pull <shortname> <branch>`
+
+To configure how Git will merge your code, the following are options (more on branches later):
+```bash
+git config --global pull.rebase false # Merges branch history
+git config --global pull.rebase true # Rebase: Converts history into linear
+```
+
+To put your changes into the remote branch: `git push <shortname> <branch>`
+
+## Renaming and Removing Remotes
+```bash
+git remote rename <old_name> <new_name> # Renames shortname
+git remote remove <shortname> # Remove remote
+```
+
 # Branches
 
 Commits are however, identified by hash values, and are not human-readable. Hence, a **branch**, which references a series of snapshots (commits). They are *mutable* because each commit is *immutable*.
