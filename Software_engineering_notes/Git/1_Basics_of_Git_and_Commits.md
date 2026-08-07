@@ -7,7 +7,7 @@ git clone [url] [name_in_local]
 
 ## Recording Changes in a Repository
 
-Each file in a directory can be in either state: *tracked* or *untracked*. Tracked files include the rest of the code that will be modified, staged, and committed. Untracked files are specific to the local (i.e. secrets in TOML, env files, etc.).
+Each file in a directory can be in either state: *tracked* or *untracked*. Tracked files include the rest of the code that will be modified, staged, and committed. Untracked files are those that are not yet added to the index (staging env). Files like these do exist (i.e. secrets in TOML, env files, etc.).
 
 ![lifecycle](assets/lifecycle.png)
 
