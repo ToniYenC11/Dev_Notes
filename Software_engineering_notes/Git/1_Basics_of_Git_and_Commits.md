@@ -133,6 +133,28 @@ git remote rename <old_name> <new_name> # Renames shortname
 git remote remove <shortname> # Remove remote
 ```
 
+# Tagging
+
+Use this feature to tag an important commit with either version number or specific notes.
+
+There are two types of tags:
+1. **Lightweight** - A pointer to a specific commit 
+2. **Annotated** - Stored as full object in git (`.git/objects`)
+
+## Commands Around Tags
+
+Creating annotated tags: `git tag -a <name_of_tag> -m <tag_message>`
+Listing tags: `git tag`
+Listing tags with a specific pattern: `git tag -l <pattern>`
+Deleting tags: `git tag -d <name_of_tag>`
+View versions of a tag: `git checkout <name_of_tag>`
+
+You can also addd a tag to a commit: `git tag -a <name_of_tag> <COMMIT>`
+
+# Aliases
+
+Rename some of your commands using: `git config --global alias.<alias_name> <command>` 
+
 # Branches
 
 Commits are however, identified by hash values, and are not human-readable. Hence, a **branch**, which references a series of snapshots (commits). They are *mutable* because each commit is *immutable*.
